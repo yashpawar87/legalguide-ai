@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
+from ai.prompts.risk_prompt import RISK_PROMPT
 from ai.graph.state import LegalGraphState, Risk
 
 class RiskOutput(BaseModel):
@@ -20,20 +21,7 @@ def risk_node(state: LegalGraphState) -> dict:
     llm = get_fast_llm()
     structured_llm = llm.with_structured_output(RiskOutput)
     
-    prompt = PromptTemplate(
-        template="""
-        You are an expert Legal Risk Analyst. Analyze the context and query to identify 
-        any legal risks, vulnerabilities, or red flags. Classify severity as High, Medium, or Low.
-        
-        Query: {query}
-        
-        Context:
-        {context}
-        """,
-        input_variables=["query", "context"]
-    )
-    
-    chain = prompt | structured_llm
+    chain = RISK_PROMPT | structured_llm
     try:
         result = chain.invoke({"query": query, "context": context})
         return {"risks": result.get("risks", []) if isinstance(result, dict) else getattr(result, "risks", [])}

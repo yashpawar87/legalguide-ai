@@ -2,6 +2,7 @@ from backend.config import settings
 from ai.config import get_heavy_llm
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
+from ai.prompts.analysis_prompt import ANALYSIS_PROMPT
 from ai.graph.state import LegalGraphState
 
 def analysis_node(state: LegalGraphState) -> dict:
@@ -14,22 +15,7 @@ def analysis_node(state: LegalGraphState) -> dict:
         
     llm = get_heavy_llm()
     
-    prompt = PromptTemplate(
-        template="""
-        You are an expert Legal Counsel. Perform a deep reasoning analysis on the facts provided 
-        in the context to answer the user's query. Provide a clear, structured legal analysis.
-        
-        Query: {query}
-        
-        Context:
-        {context}
-        
-        Analysis:
-        """,
-        input_variables=["query", "context"]
-    )
-    
-    chain = prompt | llm
+    chain = ANALYSIS_PROMPT | llm
     try:
         result = chain.invoke({"query": query, "context": context})
         return {"analysis": result.content}

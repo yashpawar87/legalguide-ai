@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
+from ai.prompts.precedent_prompt import PRECEDENT_PROMPT
 from ai.graph.state import LegalGraphState, Precedent
 
 class PrecedentOutput(BaseModel):
@@ -11,31 +12,29 @@ class PrecedentOutput(BaseModel):
 
 def precedent_node(state: LegalGraphState) -> dict:
     print("--- [Node] Precedent Agent ---")
-    context = state.get("context", "")
+    context_precedents = state.get("context_precedents", "")
+    user_document_context = state.get("user_document_context", "")
     query = state.get("query", "")
+    statutes = state.get("statutes", [])
     
-    if not context:
+    if not query:
         return {"precedents": []}
         
     llm = get_fast_llm()
     structured_llm = llm.with_structured_output(PrecedentOutput)
     
-    prompt = PromptTemplate(
-        template="""
-        You are an expert Legal AI. Extract any similar case precedents, past judgments, 
-        or legal principles cited in the context.
-        
-        Query: {query}
-        
-        Context:
-        {context}
-        """,
-        input_variables=["query", "context"]
-    )
+    chain = PRECEDENT_PROMPT | structured_llm
     
-    chain = prompt | structured_llm
+    # Format statutes as a readable string
+    statutes_str = "\n".join([f"{s.act_name} Section {s.section}: {s.relevance}" for s in statutes])
+    
     try:
-        result = chain.invoke({"query": query, "context": context})
+        result = chain.invoke({
+            "query": query, 
+            "user_document_context": user_document_context,
+            "statutes": statutes_str,
+            "context_precedents": context_precedents
+        })
         return {"precedents": result.get("precedents", []) if isinstance(result, dict) else getattr(result, "precedents", [])}
     except Exception as e:
         print(f"Precedent Agent Error: {e}")

@@ -2,6 +2,7 @@ from backend.config import settings
 from ai.config import get_heavy_llm
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
+from ai.prompts.synthesis_prompt import SYNTHESIS_PROMPT
 from ai.graph.state import LegalGraphState
 
 def synthesis_node(state: LegalGraphState) -> dict:
@@ -22,36 +23,7 @@ def synthesis_node(state: LegalGraphState) -> dict:
     
     llm = get_heavy_llm()
     
-    prompt = PromptTemplate(
-        template="""
-        You are the Lead Legal Counsel orchestrating a final report. Synthesize the findings from your 
-        specialized legal agents into a highly professional, structured, and comprehensive final report 
-        for the user.
-        
-        Original Query: {query}
-        
-        --- Agent Findings ---
-        Analysis:
-        {analysis}
-        
-        Applicable Statutes:
-        {statutes_str}
-        
-        Precedents:
-        {precedents_str}
-        
-        Identified Risks:
-        {risks_str}
-        
-        Citations:
-        {citations_str}
-        
-        Provide the final synthesized report:
-        """,
-        input_variables=["query", "analysis", "statutes_str", "precedents_str", "risks_str", "citations_str"]
-    )
-    
-    chain = prompt | llm
+    chain = SYNTHESIS_PROMPT | llm
     try:
         result = chain.invoke({
             "query": query,

@@ -41,9 +41,15 @@ class LegalGraphState(TypedDict):
     """
     
     query: str                          # Original user query
+    query_intent: str                   # 'factual' or 'legal'
     document_id: str                    # Uploaded document ID
+    user_document_context: str          # Formatted context from uploaded doc
     retrieved_docs: List[Document]      # Retrieved context from FAISS
-    context: str                        # Formatted context for LLM
+    context_bnss: str                   # Formatted context from BNSS
+    context_ipc: str                    # Formatted context from IPC
+    context_precedents: str             # Formatted context from precedents
+    context_qna: str                    # Formatted context from Constitution/QA
+    context: str                        # General context (kept for fallback)
     statutes: List[Statute]             # Applicable laws
     precedents: List[Precedent]         # Similar case precedents
     risks: List[Risk]                   # Identified risks

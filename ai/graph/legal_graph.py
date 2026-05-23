@@ -9,15 +9,25 @@ from ai.agents.risk_agent import risk_node
 from ai.agents.analysis_agent import analysis_node
 from ai.agents.citation_agent import citation_node
 from ai.agents.synthesis_agent import synthesis_node
+from ai.agents.router_agent import router_node
+from ai.agents.fact_qa_agent import fact_qa_node
+
+def route_query(state: LegalGraphState):
+    """Conditional routing logic based on intent classification."""
+    intent = state.get("query_intent", "legal")
+    if intent == "factual":
+        return "FactQAAgent"
+    return "RetrievalAgent"
 
 def create_legal_graph():
     """
-    Creates and compiles the NyayaAI multi-agent LangGraph workflow.
+    Creates and compiles the LegalGuide AI multi-agent LangGraph workflow.
     """
     # Initialize the graph with the global state schema
     workflow = StateGraph(LegalGraphState)
     
-    # 1. Register all nodes (agents)
+    workflow.add_node("RouterAgent", router_node)
+    workflow.add_node("FactQAAgent", fact_qa_node)
     workflow.add_node("RetrievalAgent", retrieval_node)
     workflow.add_node("StatuteAgent", statute_node)
     workflow.add_node("PrecedentAgent", precedent_node)
@@ -28,8 +38,17 @@ def create_legal_graph():
     
     # 2. Define the edges (workflow routing)
     
-    # Step 1: Start at Retrieval
-    workflow.add_edge(START, "RetrievalAgent")
+    # Step 1: Start at Router
+    workflow.add_edge(START, "RouterAgent")
+    
+    # Step 2: Conditional Routing based on Intent
+    workflow.add_conditional_edges(
+        "RouterAgent",
+        route_query
+    )
+    
+    # Fast-Track Path: Fact QA immediately ends
+    workflow.add_edge("FactQAAgent", END)
     
     # Step 2: Extract Statutes based on retrieved context
     workflow.add_edge("RetrievalAgent", "StatuteAgent")
