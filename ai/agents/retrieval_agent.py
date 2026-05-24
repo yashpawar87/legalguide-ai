@@ -9,6 +9,7 @@ def retrieval_node(state: LegalGraphState) -> dict:
     print("--- [Node] Retrieval Agent ---")
     query = state.get("query", "")
     document_id = state.get("document_id", "")
+    user_id = state.get("user_id", "")
     
     if not query:
         return {"error": "Empty query provided to retrieval node."}
@@ -19,7 +20,7 @@ def retrieval_node(state: LegalGraphState) -> dict:
         if document_id:
             try:
                 # Qdrant requires specific models for payload filtering. Langchain wrapper uses dictionary filters.
-                filter_dict = {"document_id": int(document_id)} # Assumes document_id is an int because SQLAlchemy ID is int
+                filter_dict = {"document_id": int(document_id), "user_id": user_id} 
                 user_docs = retrieve(query, collection_name="user_documents_collection", k=5, filter_dict=filter_dict)
             except Exception as e:
                 print(f"Warning: Failed to retrieve user document: {e}")

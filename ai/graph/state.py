@@ -43,6 +43,7 @@ class LegalGraphState(TypedDict):
     query: str                          # Original user query
     query_intent: str                   # 'factual' or 'legal'
     document_id: str                    # Uploaded document ID
+    user_id: str                        # Authenticated User ID
     user_document_context: str          # Formatted context from uploaded doc
     retrieved_docs: List[Document]      # Retrieved context from FAISS
     context_bnss: str                   # Formatted context from BNSS

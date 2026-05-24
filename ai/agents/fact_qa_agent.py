@@ -30,6 +30,7 @@ def fact_qa_node(state: LegalGraphState) -> dict:
     print("--- [Node] Fact QA Agent (Fast Track) ---")
     query = state.get("query", "")
     document_id = state.get("document_id", "")
+    user_id = state.get("user_id", "")
     
     if not document_id:
         return {
@@ -38,7 +39,7 @@ def fact_qa_node(state: LegalGraphState) -> dict:
         }
         
     try:
-        filter_dict = {"document_id": int(document_id)}
+        filter_dict = {"document_id": int(document_id), "user_id": user_id}
         user_docs = retrieve(query, collection_name="user_documents_collection", k=5, filter_dict=filter_dict)
         
         context_str = "\n".join([doc.page_content for doc in user_docs]).strip()
