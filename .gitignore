@@ -22,3 +22,7 @@ dist/
 # OS
 .DS_Store
 backend/firebase-credentials.json
+
+# Local Data and Artifacts
+data/
+test*.py
