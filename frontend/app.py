@@ -6,6 +6,7 @@ from components.risk_gauge import render_risk_gauge
 from components.risk_gauge import render_risk_gauge
 from utils.auth import sign_in_with_email_and_password
 from utils.api_client import analyze_query, upload_document, create_chat_session
+from utils.pdf_generator import generate_legal_report
 
 st.set_page_config(
     page_title="LegalGuide AI | Chat",
@@ -96,6 +97,10 @@ if not st.session_state.id_token:
 # ----------------- UNIFIED CHAT APP -----------------
 render_sidebar()
 
+@st.cache_data(show_spinner=False, max_entries=20)
+def get_pdf_bytes(msg_str: str, _msg: dict) -> bytes:
+    return generate_legal_report(_msg)
+
 # Initialize Chat State
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -135,7 +140,16 @@ for msg in st.session_state.messages:
                 
                 # Action Toolbar
                 col_d, col_s, col_sv, _ = st.columns([2,2,2,10])
-                col_d.button("⬇️ Download PDF", key=f"d_{msg.get('id', 0)}")
+                
+                pdf_bytes = get_pdf_bytes(str(msg), msg)
+                col_d.download_button(
+                    label="⬇️ Download PDF",
+                    data=pdf_bytes,
+                    file_name=f"legal_report_{msg.get('id', int(time.time()))}.pdf",
+                    mime="application/pdf",
+                    key=f"d_{msg.get('id', 0)}"
+                )
+                
                 col_s.button("🔗 Share", key=f"s_{msg.get('id', 0)}")
                 col_sv.button("💾 Save", key=f"sv_{msg.get('id', 0)}")
                 
@@ -193,6 +207,20 @@ for msg in st.session_state.messages:
                     st.caption("No explicit citations provided.")
             else:
                 # Fallback for historical messages loaded from DB which only have 'content' string
+                
+                # Action Toolbar
+                col_d, col_s, col_sv, _ = st.columns([2,2,2,10])
+                pdf_bytes = get_pdf_bytes(str(msg), msg)
+                col_d.download_button(
+                    label="⬇️ Download PDF",
+                    data=pdf_bytes,
+                    file_name=f"legal_report_{msg.get('id', int(time.time()))}.pdf",
+                    mime="application/pdf",
+                    key=f"d_{msg.get('id', 0)}_hist"
+                )
+                col_s.button("🔗 Share", key=f"s_{msg.get('id', 0)}_hist")
+                col_sv.button("💾 Save", key=f"sv_{msg.get('id', 0)}_hist")
+                
                 st.markdown("### 📑 Legal Analysis Report")
                 st.markdown(f"""
                 <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
